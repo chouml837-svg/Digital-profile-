@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Digital ID | Digital Profile</title>
+    <title>Digital ID | Profile</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     
@@ -12,118 +12,85 @@
 
     <style>
         :root { --page-bg: #f8f6f2; --accent: #00b894; --text-main: #111; }
-        * { box-sizing: border-box; transition: all 0.3s ease; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; transition: all 0.3s ease; }
         
-        body { 
-            margin: 0; background: var(--page-bg); font-family: 'Inter', sans-serif; 
-            min-height: 100vh; color: var(--text-main); display: flex; justify-content: center;
-        }
-
-        .container { width: 100%; max-width: 500px; padding: 60px 20px; }
-
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 40px; padding: 40px 30px; text-align: center;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.1);
-        }
-
-        .id-badge {
-            background: #000; color: #fff; padding: 6px 20px; border-radius: 50px;
-            font-size: 14px; font-weight: 800; letter-spacing: 2px; width: fit-content; margin: 0 auto 20px;
-        }
-
-        .pfp-area { 
-            width: 150px; height: 150px; margin: 0 auto; border-radius: 50%; padding: 5px; 
-            background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden;
-        }
-        .pfp-area img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-
-        .user-name { font-family: 'Playfair Display', serif; font-size: 36px; margin: 20px 0; outline: none; }
-
-        .info-grid { display: grid; gap: 15px; margin-top: 25px; text-align: left; }
-        .info-item { background: #fff; padding: 20px; border-radius: 25px; border: 1px solid rgba(0,0,0,0.05); }
-        .label { font-size: 11px; font-weight: 800; color: #666; text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-        .content { font-size: 18px; font-weight: 600; outline: none; }
-
-        .vibe-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
-        .social-bar { display: flex; justify-content: center; gap: 15px; margin-top: 30px; flex-wrap: wrap; }
-        .social-icon { width: 55px; height: 55px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); text-decoration: none; color: inherit; }
-
-        .gallery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
-        .photo-card { border-radius: 20px; overflow: hidden; aspect-ratio: 1; background: #ddd; position: relative; }
-        .photo-card img { width: 100%; height: 100%; object-fit: cover; }
-
-        .start-btn { 
-            padding: 20px 40px; border-radius: 50px; background: #222; color: #fff; 
-            border: none; font-weight: 800; font-size: 18px; cursor: pointer; width: 100%;
-        }
-
-        .edit-fab { position: fixed; bottom: 30px; right: 30px; width: 65px; height: 65px; background: #222; color: #fff; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 28px; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-
-        .studio { position: fixed; bottom: 0; left: 0; width: 100%; height: 80vh; background: #fff; border-radius: 40px 40px 0 0; z-index: 1000; padding: 40px; display: none; flex-direction: column; overflow-y: auto; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); }
+        body { margin: 0; background: var(--page-bg); font-family: 'Inter', sans-serif; min-height: 100vh; color: var(--text-main); display: flex; justify-content: center; align-items: flex-start; }
+        .container { width: 100%; max-width: 500px; padding: 40px 20px; display: none; } /* Hidden until ID is confirmed */
         
+        /* Error/Loading State */
+        #statusOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; background: #f8f6f2; z-index: 9999; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #ddd; border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .glass-panel { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); border-radius: 35px; padding: 35px 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.08); text-align: center; border: 1px solid #fff; }
+        .id-badge { background: #000; color: #fff; padding: 8px 20px; border-radius: 50px; font-size: 14px; font-weight: 800; width: fit-content; margin: 0 auto 20px; }
+        .pfp-area { width: 140px; height: 140px; margin: 0 auto; border-radius: 50%; background: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; border: 5px solid #fff; }
+        .pfp-area img { width: 100%; height: 100%; object-fit: cover; }
+        .user-name { font-family: 'Playfair Display', serif; font-size: 32px; margin: 15px 0; outline: none; }
+        
+        .info-grid { display: grid; gap: 12px; margin-top: 20px; text-align: left; }
+        .info-item { background: #fff; padding: 18px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.03); }
+        .label { font-size: 10px; font-weight: 800; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .content { font-size: 17px; font-weight: 600; }
+
+        .social-bar { display: flex; justify-content: center; gap: 12px; margin-top: 25px; }
+        .social-icon { width: 50px; height: 50px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-decoration: none; color: #222; }
+
+        .start-btn { padding: 20px; border-radius: 50px; background: #222; color: #fff; border: none; font-weight: 800; font-size: 18px; cursor: pointer; width: 100%; margin-top: 30px; }
+        .edit-fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: #222; color: #fff; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 100; }
+        .studio { position: fixed; bottom: 0; left: 0; width: 100%; height: 80vh; background: #fff; border-radius: 35px 35px 0 0; z-index: 1000; padding: 30px; display: none; flex-direction: column; overflow-y: auto; }
         .hidden { display: none !important; }
-        .del-btn { position: absolute; top: 10px; right: 10px; background: #ff4757; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; }
     </style>
 </head>
 <body>
 
-<div class="container" id="mainContainer">
-    <div class="glass-panel" id="infoCard">
-        <div class="id-badge">ID: <span id="displayID">...</span></div>
-        
+<div id="statusOverlay">
+    <div class="spinner" id="loadingSpinner"></div>
+    <h2 id="statusText">Connecting...</h2>
+    <p id="statusSubtext">Please wait while we load the digital profile.</p>
+</div>
+
+<div class="container" id="mainUI">
+    <div class="glass-panel">
+        <div class="id-badge">ID: <span id="displayID">####</span></div>
         <div class="pfp-area" id="pfpTrigger">
-            <img id="pfpImg" src="https://via.placeholder.com/200?text=SCAN">
+            <img id="pfpImg" src="https://via.placeholder.com/200?text=USER">
             <input type="file" id="pfpInput" class="hidden" accept="image/*">
         </div>
-        
-        <h1 class="user-name" id="uName">Loading Profile...</h1>
+        <h1 class="user-name" id="uName">New User</h1>
 
         <div class="info-grid">
-            <div class="info-item"><div class="label">Birthday</div><div class="content" id="uBday">...</div></div>
-            <div class="info-item"><div class="label">Interests</div><div class="content" id="uHobbies">...</div></div>
+            <div class="info-item"><div class="label">Birthday</div><div class="content" id="uBday">Not set</div></div>
+            <div class="info-item"><div class="label">Interests</div><div class="content" id="uHobbies">Add interests</div></div>
         </div>
 
-        <div class="vibe-row">
-            <div class="info-item"><div class="label" style="color:var(--accent)">Likes</div><div class="content" id="uLikes">...</div></div>
-            <div class="info-item"><div class="label" style="color:#ff4757">Dislikes</div><div class="content" id="uDislikes">...</div></div>
-        </div>
         <div class="social-bar" id="socialBar"></div>
-    </div>
-
-    <div class="gallery-grid" id="gallery"></div>
-    <button id="addImgBtn" class="hidden start-btn" style="margin-top: 20px; background: #fff; color: #222;">+ ADD PHOTO</button>
-    <input type="file" id="galInput" class="hidden" accept="image/*" multiple>
-
-    <div id="scannerZone" style="margin-top:40px; text-align:center;">
-        <div id="claimedUI" class="hidden">
-            <div id="fpBtn" style="font-size:50px; cursor:pointer;"><i class="fa-solid fa-fingerprint"></i></div>
-            <p style="font-weight:800; color:#888; font-size:12px; margin-top:10px;">LOCKED PROFILE</p>
-        </div>
-        <div id="unclaimedUI" class="hidden">
-            <button class="start-btn" id="startBtn">LET'S GET STARTED</button>
+        <div id="scannerZone" style="margin-top:20px;">
+            <div id="unclaimedUI" class="hidden">
+                <button class="start-btn" id="startBtn">LET'S GET STARTED</button>
+            </div>
+            <div id="claimedUI" class="hidden">
+                <div style="font-size:30px; color:#ccc;"><i class="fa-solid fa-fingerprint"></i></div>
+                <p style="font-size:10px; font-weight:800; color:#aaa; margin-top:5px;">SECURED PROFILE</p>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="edit-fab" id="openStudio"><i class="fa-solid fa-pen-nib"></i></div>
+<div class="edit-fab" id="openStudio"><i class="fa-solid fa-pen"></i></div>
+
 <div class="studio" id="studioPanel">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+    <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
         <h2>Customize</h2>
-        <i class="fa-solid fa-xmark" id="closeStudio" style="font-size:30px; cursor:pointer;"></i>
+        <i class="fa-solid fa-circle-xmark" id="closeStudio" style="font-size:30px; color:#ddd;"></i>
     </div>
-    <p class="label">Background Color</p>
-    <input type="color" id="bgPicker" onchange="document.body.style.backgroundColor = this.value" style="width:100%; height:50px; border:none; border-radius:10px; margin-bottom:20px;">
-    <p class="label">Social Link</p>
-    <input type="url" id="socialInput" style="width:100%; padding:15px; border-radius:10px; border:1px solid #ddd; margin-bottom:10px;" placeholder="Instagram/TikTok URL">
-    <button onclick="addLink()" style="width:100%; padding:12px; margin-bottom:30px;">Add Link</button>
-    <button onclick="saveAll()" class="start-btn" style="background:var(--accent)">SAVE & LOCK</button>
+    <p class="label">Social Media URL</p>
+    <input type="url" id="socialInput" style="width:100%; padding:15px; border-radius:10px; border:1px solid #eee; margin-bottom:10px;" placeholder="https://instagram.com/user">
+    <button onclick="addLink()" style="width:100%; padding:12px; margin-bottom:20px;">Add Social Icon</button>
+    <button onclick="saveAll()" class="start-btn" style="background:var(--accent)">SAVE PROFILE</button>
 </div>
 
 <script>
-    // 1. CONFIGURATION
     const firebaseConfig = {
         apiKey: "AIzaSyDO7jeyEQr6qdYrorxzT5lNh0QiLzMwYmw",
         authDomain: "qr-code-project-21d42.firebaseapp.com",
@@ -134,48 +101,42 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 2. STATE
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('id');
-    let galleryList = [];
     let socialLinks = [];
 
-    if(!userId) {
-        document.getElementById('uName').innerText = "Invalid ID";
-        document.getElementById('displayID').innerText = "ERROR";
+    // --- INITIALIZATION CHECK ---
+    if (!userId) {
+        document.getElementById('loadingSpinner').classList.add('hidden');
+        document.getElementById('statusText').innerText = "No ID Detected";
+        document.getElementById('statusSubtext').innerText = "Please scan a valid QR code with a numeric ID.";
     } else {
         document.getElementById('displayID').innerText = userId;
-        checkProfile();
+        checkDatabase();
     }
 
-    // 3. CORE LOGIC
-    function checkProfile() {
+    function checkDatabase() {
         db.ref('profiles/' + userId).once('value', (snap) => {
+            // Hide overlay and show UI
+            document.getElementById('statusOverlay').style.display = 'none';
+            document.getElementById('mainUI').style.display = 'block';
+
             if (snap.exists()) {
                 document.getElementById('claimedUI').classList.remove('hidden');
-                loadData(snap.val());
+                renderData(snap.val());
             } else {
                 document.getElementById('unclaimedUI').classList.remove('hidden');
-                document.getElementById('uName').innerText = "Unclaimed ID";
             }
         });
     }
 
-    const isOwner = () => localStorage.getItem('key_' + userId) === 'true';
-
-    document.getElementById('startBtn').onclick = () => unlockEditor();
-    document.getElementById('fpBtn').onclick = () => isOwner() ? unlockEditor() : alert("Not your ID!");
-
-    function unlockEditor() {
-        document.getElementById('scannerZone').classList.add('hidden');
+    // --- EDITOR LOGIC ---
+    document.getElementById('startBtn').onclick = () => {
+        document.getElementById('unclaimedUI').classList.add('hidden');
         document.getElementById('openStudio').style.display = 'flex';
-        document.getElementById('addImgBtn').classList.remove('hidden');
         document.querySelectorAll('.content, .user-name').forEach(el => el.contentEditable = true);
-        document.getElementById('uName').innerText = document.getElementById('uName').innerText === "Unclaimed ID" ? "Your Name" : document.getElementById('uName').innerText;
-        renderGallery(); renderSocials();
-    }
+    };
 
-    // SOCIALS
     window.addLink = () => {
         const val = document.getElementById('socialInput').value;
         if(val) { socialLinks.push(val); renderSocials(); document.getElementById('socialInput').value = ''; }
@@ -191,37 +152,12 @@
         });
     }
 
-    // GALLERY
-    document.getElementById('addImgBtn').onclick = () => document.getElementById('galInput').click();
-    document.getElementById('galInput').onchange = (e) => {
-        Array.from(e.target.files).forEach(file => {
-            const r = new FileReader();
-            r.onload = (ev) => { galleryList.push(ev.target.result); renderGallery(); };
-            r.readAsDataURL(file);
-        });
-    };
-
-    window.removePhoto = (i) => { galleryList.splice(i, 1); renderGallery(); };
-
-    function renderGallery() {
-        const g = document.getElementById('gallery'); g.innerHTML = '';
-        const canEdit = document.getElementById('uName').contentEditable === "true";
-        galleryList.forEach((src, i) => {
-            g.innerHTML += `<div class="photo-card"><img src="${src}">${canEdit ? `<div class="del-btn" onclick="removePhoto(${i})">×</div>` : ''}</div>`;
-        });
-    }
-
-    // SAVE
     window.saveAll = async () => {
         const data = {
             name: document.getElementById('uName').innerText,
             bday: document.getElementById('uBday').innerText,
             hobbies: document.getElementById('uHobbies').innerText,
-            likes: document.getElementById('uLikes').innerText,
-            dislikes: document.getElementById('uDislikes').innerText,
             pfp: document.getElementById('pfpImg').src,
-            pageBg: document.body.style.backgroundColor,
-            gallery: galleryList,
             socials: socialLinks,
             claimed: true
         };
@@ -230,20 +166,21 @@
         location.reload();
     };
 
-    function loadData(v) {
-        document.getElementById('uName').innerText = v.name || '';
+    function renderData(v) {
+        document.getElementById('uName').innerText = v.name || 'User';
         document.getElementById('uBday').innerText = v.bday || '';
         document.getElementById('uHobbies').innerText = v.hobbies || '';
-        document.getElementById('uLikes').innerText = v.likes || '';
-        document.getElementById('uDislikes').innerText = v.dislikes || '';
         document.getElementById('pfpImg').src = v.pfp || 'https://via.placeholder.com/200';
-        document.body.style.backgroundColor = v.pageBg || '#f8f6f2';
-        galleryList = v.gallery || [];
         socialLinks = v.socials || [];
-        renderGallery(); renderSocials();
+        renderSocials();
+        
+        if (localStorage.getItem('key_' + userId) === 'true') {
+            document.getElementById('openStudio').style.display = 'flex';
+            document.querySelectorAll('.content, .user-name').forEach(el => el.contentEditable = true);
+        }
     }
 
-    // STUDIO UI
+    // UI Toggles
     document.getElementById('openStudio').onclick = () => document.getElementById('studioPanel').style.display = 'flex';
     document.getElementById('closeStudio').onclick = () => document.getElementById('studioPanel').style.display = 'none';
     document.getElementById('pfpTrigger').onclick = () => { if(document.getElementById('uName').contentEditable === "true") document.getElementById('pfpInput').click(); };
