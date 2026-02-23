@@ -3,103 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Digital Profile | Ultimate</title>
+    <title>Digital Profile | Ver. 3.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     
     <style>
-        :root {
-            --page-bg: #f8f6f2;
-            --card-bg: #ffffff;
-            --pfp-shape: 50%;
-            --accent: #00b894;
-        }
-
+        :root { --page-bg: #f8f6f2; --card-bg: #ffffff; --pfp-shape: 50%; --accent: #00b894; }
         * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); -webkit-tap-highlight-color: transparent; }
-        
-        body { 
-            margin: 0; background: var(--page-bg); background-size: cover; background-position: center;
-            background-attachment: fixed; font-family: 'Inter', sans-serif; color: #333; min-height: 100vh;
-            overflow-x: hidden;
-        }
-
+        body { margin: 0; background: var(--page-bg); background-size: cover; background-position: center; background-attachment: fixed; font-family: 'Inter', sans-serif; color: #333; min-height: 100vh; overflow-x: hidden; }
         .container { max-width: 450px; margin: 0 auto; padding: 100px 20px 60px; position: relative; }
 
-        /* Main Card & Info */
-        .main-white-card {
-            background: var(--card-bg); background-size: cover; background-position: center;
-            border-radius: 40px; padding: 35px 25px; position: relative;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center;
-        }
+        /* Loader Overlay */
+        #syncLoader { position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .spinner { width: 50px; height: 50px; border: 5px solid #eee; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .pfp-area {
-            width: 150px; height: 150px; margin-top: -110px; background: #fff; padding: 5px; 
-            border-radius: var(--pfp-shape); box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            overflow: hidden; z-index: 10; position: relative;
-        }
+        /* Main Card */
+        .main-white-card { background: var(--card-bg); background-size: cover; background-position: center; border-radius: 40px; padding: 35px 25px; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; }
+        .pfp-area { width: 140px; height: 140px; margin-top: -100px; background: #fff; padding: 5px; border-radius: var(--pfp-shape); box-shadow: 0 10px 20px rgba(0,0,0,0.1); overflow: hidden; z-index: 10; position: relative; }
         .pfp-area img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--pfp-shape); }
-
         .user-name { font-family: 'Playfair Display', serif; font-size: 32px; margin: 20px 0; outline: none; text-align: center; }
         
+        /* Form Styling */
         .info-item { width: 100%; margin-bottom: 18px; }
         .section-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); margin-bottom: 6px; display: block; }
-        .sub-card { background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); width: 100%; padding: 15px; border-radius: 18px; border: 1px solid rgba(255, 255, 255, 0.3); outline: none; min-height: 20px; font-weight: 500; }
+        .sub-card { background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(5px); width: 100%; padding: 15px; border-radius: 18px; border: 1px solid rgba(0,0,0,0.05); outline: none; min-height: 20px; font-weight: 500; }
+        [contenteditable="true"] { border: 1.5px dashed var(--accent) !important; background: #fff !important; }
 
-        /* Gallery & Drag Animations */
+        /* Gallery */
         .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px; }
-        .photo-item { border-radius: 20px; overflow: hidden; aspect-ratio: 1; position: relative; cursor: grab; background: #eee; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .photo-item { border-radius: 20px; overflow: hidden; aspect-ratio: 1; position: relative; background: #eee; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .photo-item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
         .photo-item.dragging { transform: scale(0.9); opacity: 0.6; filter: grayscale(1); border: 2px solid #ff4757; z-index: 100; }
 
-        #trash-zone {
-            position: fixed; bottom: 125px; left: 50%; transform: translateX(-50%) scale(0);
-            width: 80px; height: 80px; background: #ff4757; color: white;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 28px; z-index: 3000; box-shadow: 0 15px 35px rgba(255,71,87,0.4);
-            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        #trash-zone.show { transform: translateX(-50%) scale(1); animation: pulseRed 1.5s infinite; }
-
-        /* Fingerprint & Popups */
-        .access-trigger { margin: 40px auto 0; width: 70px; height: 70px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; box-shadow: 0 8px 25px rgba(0,0,0,0.1); color: #ddd; position: relative; z-index: 1000; }
+        /* Popups & Icons */
+        #trash-zone { position: fixed; bottom: 125px; left: 50%; transform: translateX(-50%) scale(0); width: 80px; height: 80px; background: #ff4757; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; z-index: 3000; transition: 0.3s; }
+        #trash-zone.show { transform: translateX(-50%) scale(1); }
         
+        .access-trigger { margin: 40px auto 0; width: 70px; height: 70px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; box-shadow: 0 8px 25px rgba(0,0,0,0.1); color: #ddd; z-index: 1000; }
         .pulse-animation { animation: heartbeat 2s infinite; color: var(--accent) !important; }
-        
-        #popNotice {
-            position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%) translateY(20px);
-            background: #222; color: #fff; padding: 12px 25px; border-radius: 50px;
-            font-weight: 600; font-size: 14px; opacity: 0; pointer-events: none;
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 10000;
-            white-space: nowrap; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
+        @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); box-shadow: 0 0 15px var(--accent); } }
+
+        #popNotice { position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%) translateY(20px); background: #222; color: #fff; padding: 12px 25px; border-radius: 50px; font-size: 14px; opacity: 0; pointer-events: none; transition: 0.4s; z-index: 10000; }
         #popNotice.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* Keyframes */
-        @keyframes heartbeat { 
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 184, 148, 0.4); }
-            70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(0, 184, 148, 0); }
-            100% { transform: scale(1); }
-        }
-        @keyframes pulseRed {
-            0% { box-shadow: 0 0 0 0 rgba(255,71,87,0.6); }
-            70% { box-shadow: 0 0 0 25px rgba(255,71,87,0); }
-            100% { box-shadow: 0 0 0 0 rgba(255,71,87,0); }
-        }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-
-        /* Studio Panel */
-        .studio-panel { position: fixed; bottom: 0; left: 0; width: 100%; height: 85vh; background: #fff; border-radius: 35px 35px 0 0; z-index: 5000; padding: 30px; display: none; flex-direction: column; overflow-y: auto; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); }
+        .studio-panel { position: fixed; bottom: 0; left: 0; width: 100%; height: 85vh; background: #fff; border-radius: 35px 35px 0 0; z-index: 9000; padding: 30px; display: none; flex-direction: column; overflow-y: auto; }
         .swatch { width: 100%; aspect-ratio: 1; border-radius: 12px; cursor: pointer; border: 1px solid #eee; }
         .hidden { display: none !important; }
-        [contenteditable="true"] { background: rgba(0,184,148,0.05) !important; border: 1px dashed var(--accent) !important; padding: 5px; border-radius: 10px; }
     </style>
 </head>
 <body>
 
+<div id="syncLoader"><div class="spinner"></div><p style="margin-top:15px; font-weight:bold;">Saving to Cloud...</p></div>
 <div id="popNotice">Notice message</div>
 <div id="trash-zone"><i class="fa-solid fa-trash-can"></i></div>
 
@@ -113,7 +68,7 @@
 
         <div class="info-item">
             <span class="section-label">About Me</span>
-            <div class="sub-card" id="uAbout">Tap the fingerprint to claim this ID.</div>
+            <div class="sub-card" id="uAbout">Tap the fingerprint below to start editing.</div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%;">
@@ -129,47 +84,43 @@
 
         <div class="info-item">
             <span class="section-label">Favorite</span>
-            <div class="sub-card" id="uFav">Music, Movies, Food...</div>
+            <div class="sub-card" id="uFav">Music, Movies...</div>
         </div>
     </div>
 
     <div class="gallery-grid" id="uGallery"></div>
-    <button id="addGalBtn" class="hidden" style="width:100%; margin-top:20px; padding:18px; border-radius:22px; border:2px dashed #ddd; background:#fff; font-weight:800; color:#aaa; cursor:pointer;">+ ADD GALLERY PHOTO</button>
+    <button id="addGalBtn" class="hidden" style="width:100%; margin-top:20px; padding:18px; border-radius:22px; border:2.5px dashed #eee; background:#fff; font-weight:800; color:#ccc; cursor:pointer;">+ ADD PHOTO</button>
     <input type="file" id="galInput" class="hidden" multiple accept="image/*">
     
     <div id="socialBar" style="display:flex; justify-content:center; gap:15px; margin-top:30px;"></div>
-    
-    <div class="access-trigger" id="keyBtn">
-        <i id="mainIcon" class="fa-solid fa-fingerprint"></i>
-    </div>
+    <div class="access-trigger" id="keyBtn"><i id="mainIcon" class="fa-solid fa-fingerprint"></i></div>
 </div>
 
 <div class="studio-panel" id="studio">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <h2 style="margin:0">Studio Lab</h2>
-        <i class="fa-solid fa-circle-xmark" id="closeStudio" style="cursor:pointer; font-size:30px; color:#eee;"></i>
+        <i class="fa-solid fa-circle-xmark" id="closeStudio" style="cursor:pointer; font-size:30px; color:#ddd;"></i>
     </div>
 
-    <p class="section-label">Full Page Background</p>
-    <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; margin-bottom:20px;">
+    <p class="section-label">Background Style</p>
+    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-bottom:20px;">
         <div class="swatch" style="background:#f8f6f2" onclick="setPageStyle('--page-bg', '#f8f6f2')"></div>
         <div class="swatch" style="background:linear-gradient(45deg, #00ff87, #60efff)" onclick="setPageStyle('--page-bg', 'linear-gradient(45deg, #00ff87, #60efff)')"></div>
         <div class="swatch" style="background:linear-gradient(45deg, #f093fb, #f5576c)" onclick="setPageStyle('--page-bg', 'linear-gradient(45deg, #f093fb, #f5576c)')"></div>
         <label class="swatch" style="background:#eee; display:flex; align-items:center; justify-content:center;"><input type="file" class="hidden" onchange="setBgImg(this, '--page-bg')"><i class="fa-solid fa-image"></i></label>
     </div>
 
-    <p class="section-label">Info Card Style</p>
-    <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; margin-bottom:20px;">
-        <div class="swatch" style="background:#fff" onclick="setPageStyle('--card-bg', '#fff')"></div>
-        <div class="swatch" style="background:#111" onclick="setPageStyle('--card-bg', '#111')"></div>
-        <label class="swatch" style="background:#eee; display:flex; align-items:center; justify-content:center;"><input type="file" class="hidden" onchange="setBgImg(this, '--card-bg')"><i class="fa-solid fa-image"></i></label>
+    <p class="section-label">Card Color</p>
+    <div style="display:flex; gap:10px; margin-bottom:20px;">
+        <div class="swatch" style="background:#fff; width:60px;" onclick="setPageStyle('--card-bg', '#fff')"></div>
+        <div class="swatch" style="background:#111; width:60px;" onclick="setPageStyle('--card-bg', '#111')"></div>
     </div>
 
-    <p class="section-label">Social Media Link</p>
-    <input type="url" id="socialIn" placeholder="Instagram, TikTok, or FB URL" style="width:100%; padding:15px; border-radius:12px; border:1px solid #eee; margin-bottom:10px;">
-    <button onclick="addSocial()" style="width:100%; padding:15px; background:#111; color:white; border-radius:12px; border:none; font-weight:600;">Link Social</button>
+    <p class="section-label">Social Media</p>
+    <input type="url" id="socialIn" placeholder="Link (Instagram/TikTok)" style="width:100%; padding:15px; border-radius:12px; border:1px solid #eee; margin-bottom:10px;">
+    <button onclick="addSocial()" style="width:100%; padding:15px; background:#111; color:white; border-radius:12px; border:none; font-weight:600;">Add Link</button>
 
-    <button onclick="saveToFirebase()" style="width:100%; margin-top:40px; padding:22px; background:var(--accent); color:white; border-radius:20px; border:none; font-weight:800; cursor:pointer; box-shadow: 0 10px 20px rgba(0,184,148,0.2);">SAVE PROFILE</button>
+    <button onclick="saveToFirebase()" style="width:100%; margin-top:40px; padding:22px; background:var(--accent); color:white; border-radius:20px; border:none; font-weight:800; cursor:pointer;">SAVE & SYNC ONLINE</button>
 </div>
 
 <script type="module">
@@ -186,66 +137,130 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const urlParams = new URLSearchParams(window.location.search);
+    
+    // Get 4-digit ID
     let userId = urlParams.get('id') || "0000";
+    
+    // AUTH CHECK: Check if this phone "owns" this ID
     let isOwner = localStorage.getItem('owner_' + userId) === 'true';
+    
     let galleryArr = [];
     let socialLinks = [];
 
-    const popNotice = document.getElementById('popNotice');
-
     function showPopup(text) {
-        popNotice.innerText = text;
-        popNotice.classList.add('show');
-        setTimeout(() => popNotice.classList.remove('show'), 2500);
+        const pop = document.getElementById('popNotice');
+        pop.innerText = text; pop.classList.add('show');
+        setTimeout(() => pop.classList.remove('show'), 2500);
     }
 
-    loadData();
-
-    // --- AUTH LOGIC ---
-    document.getElementById('keyBtn').onclick = async () => {
-        const snap = await get(ref(db, 'profiles/' + userId));
-        const keyBtn = document.getElementById('keyBtn');
-
-        if (!snap.exists()) {
-            showPopup("✨ Let's get started!");
-            enableEditing();
-            keyBtn.classList.remove('pulse-animation');
-            document.getElementById('studio').style.display = 'flex';
-        } 
-        else if (isOwner) {
-            showPopup("🛠️ Entering Edit Mode...");
-            enableEditing();
-            document.getElementById('studio').style.display = 'flex';
-        } 
-        else {
-            showPopup("🔒 Access Denied: Incorrect Digital Key.");
-            keyBtn.style.animation = "shake 0.4s";
-            setTimeout(() => keyBtn.style.animation = "", 400);
+    // --- DATA LOADING ---
+    onValue(ref(db, 'profiles/' + userId), (snap) => {
+        const v = snap.val();
+        const btn = document.getElementById('keyBtn');
+        if(v) {
+            document.getElementById('uName').innerText = v.name || "User";
+            document.getElementById('uAbout').innerText = v.about || "";
+            document.getElementById('uBday').innerText = v.bday || "";
+            document.getElementById('uHobbies').innerText = v.hobbies || "";
+            document.getElementById('uFav').innerText = v.fav || "";
+            document.getElementById('pfpImg').src = v.pfp || "";
+            document.documentElement.style.setProperty('--page-bg', v.pageStyle || "#f8f6f2");
+            document.documentElement.style.setProperty('--card-bg', v.cardStyle || "#fff");
+            galleryArr = v.gallery || [];
+            socialLinks = v.socials || [];
+            renderSocials(); renderGallery();
+            btn.classList.remove('pulse-animation');
+            if(isOwner) enableEditing(false); // Enable editing quietly on load
+        } else {
+            btn.classList.add('pulse-animation');
         }
-    };
+    });
 
-    function enableEditing() {
-        isOwner = true;
-        document.getElementById('addGalBtn').classList.remove('hidden');
-        document.getElementById('mainIcon').className = "fa-solid fa-wand-magic-sparkles";
-        document.getElementById('keyBtn').style.color = "var(--accent)";
-        document.querySelectorAll('.sub-card, .user-name').forEach(el => el.contentEditable = true);
-        renderGallery();
-    }
-
-    // --- PHOTO OPTIMIZATION ---
-    async function processImg(base64) {
+    // --- SMART COMPRESSION (Prevents Save Fail) ---
+    async function compress(base64, quality = 0.5) {
         return new Promise((resolve) => {
             const img = new Image();
             img.src = base64;
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const scale = Math.min(1, 800 / img.width);
+                const scale = Math.min(1, 600 / img.width);
                 canvas.width = img.width * scale; canvas.height = img.height * scale;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                resolve(canvas.toDataURL('image/jpeg', 0.6));
+                resolve(canvas.toDataURL('image/jpeg', quality));
             };
+        });
+    }
+
+    // --- BUTTON LOGIC ---
+    document.getElementById('keyBtn').onclick = async () => {
+        const snap = await get(ref(db, 'profiles/' + userId));
+        if(!snap.exists() || isOwner) {
+            showPopup(isOwner ? "🛠️ Edit Mode Active" : "✨ Profile Created!");
+            enableEditing(true);
+        } else {
+            showPopup("🔒 This ID is locked to another phone.");
+        }
+    };
+
+    function enableEditing(openStudio) {
+        isOwner = true;
+        localStorage.setItem('owner_' + userId, 'true'); // Key saved to phone
+        document.getElementById('addGalBtn').classList.remove('hidden');
+        document.getElementById('mainIcon').className = "fa-solid fa-wand-magic-sparkles";
+        document.getElementById('keyBtn').style.color = "var(--accent)";
+        document.querySelectorAll('.sub-card, .user-name').forEach(el => el.contentEditable = true);
+        if(openStudio) document.getElementById('studio').style.display = 'flex';
+        renderGallery();
+    }
+
+    // --- SAVE LOGIC (THE FIX) ---
+    window.saveToFirebase = async () => {
+        document.getElementById('syncLoader').style.display = 'flex';
+        
+        try {
+            const data = {
+                name: document.getElementById('uName').innerText,
+                about: document.getElementById('uAbout').innerText,
+                bday: document.getElementById('uBday').innerText,
+                hobbies: document.getElementById('uHobbies').innerText,
+                fav: document.getElementById('uFav').innerText,
+                pfp: document.getElementById('pfpImg').src,
+                pageStyle: getComputedStyle(document.documentElement).getPropertyValue('--page-bg'),
+                cardStyle: getComputedStyle(document.documentElement).getPropertyValue('--card-bg'),
+                gallery: galleryArr,
+                socials: socialLinks,
+                timestamp: Date.now()
+            };
+
+            await set(ref(db, 'profiles/' + userId), data);
+            localStorage.setItem('owner_' + userId, 'true'); // Double lock the ownership
+            
+            document.getElementById('syncLoader').style.display = 'none';
+            showPopup("✅ Saved Successfully!");
+            setTimeout(() => location.reload(), 1000); // Reload to confirm sync
+        } catch (err) {
+            document.getElementById('syncLoader').style.display = 'none';
+            alert("Save failed! Photos might be too large.");
+        }
+    };
+
+    // --- GALLERY & SOCIAL RENDERING ---
+    function renderGallery() {
+        const g = document.getElementById('uGallery'); g.innerHTML = '';
+        galleryArr.forEach((src, i) => {
+            const d = document.createElement('div'); d.className = 'photo-item';
+            d.innerHTML = `<img src="${src}">`;
+            if(isOwner) {
+                d.ontouchstart = () => { d.classList.add('dragging'); document.getElementById('trash-zone').classList.add('show'); };
+                d.ontouchend = (e) => {
+                    d.classList.remove('dragging'); document.getElementById('trash-zone').classList.remove('show');
+                    const trash = document.getElementById('trash-zone').getBoundingClientRect();
+                    const touch = e.changedTouches[0];
+                    if(touch.clientY > trash.top - 50) { galleryArr.splice(i, 1); renderGallery(); }
+                };
+            }
+            g.appendChild(d);
         });
     }
 
@@ -253,48 +268,21 @@
         [...e.target.files].forEach(file => {
             const r = new FileReader();
             r.onload = async () => { 
-                const optimized = await processImg(r.result);
-                galleryArr.push(optimized); 
-                renderGallery(); 
+                const compressed = await compress(r.result);
+                galleryArr.push(compressed); renderGallery(); 
             };
             r.readAsDataURL(file);
         });
     };
     document.getElementById('addGalBtn').onclick = () => document.getElementById('galInput').click();
 
-    // --- GALLERY DRAG REMOVE ---
-    function renderGallery() {
-        const g = document.getElementById('uGallery'); g.innerHTML = '';
-        galleryArr.forEach((src, i) => {
-            const d = document.createElement('div');
-            d.className = 'photo-item';
-            d.innerHTML = `<img src="${src}">`;
-            
-            if(isOwner) {
-                d.ontouchstart = () => {
-                    d.classList.add('dragging');
-                    document.getElementById('trash-zone').classList.add('show');
-                };
-                d.ontouchend = (e) => {
-                    d.classList.remove('dragging');
-                    const trash = document.getElementById('trash-zone').getBoundingClientRect();
-                    const touch = e.changedTouches[0];
-                    if(touch.clientY > trash.top - 60) {
-                        galleryArr.splice(i, 1); renderGallery();
-                    }
-                    document.getElementById('trash-zone').classList.remove('show');
-                };
-                d.ondblclick = () => { if(confirm("Remove?")) { galleryArr.splice(i,1); renderGallery(); }};
-            }
-            g.appendChild(d);
-        });
-    }
-
-    // --- STYLES ---
     window.setPageStyle = (v, val) => document.documentElement.style.setProperty(v, val);
     window.setBgImg = (input, v) => {
         const r = new FileReader();
-        r.onload = () => document.documentElement.style.setProperty(v, `url(${r.result})`);
+        r.onload = async () => {
+            const lowRes = await compress(r.result, 0.4);
+            document.documentElement.style.setProperty(v, `url(${lowRes})`);
+        };
         r.readAsDataURL(input.files[0]);
     };
 
@@ -308,52 +296,8 @@
         socialLinks.forEach(l => {
             const a = document.createElement('a');
             a.style = "width:45px; height:45px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 5px 15px rgba(0,0,0,0.05); color:#222; text-decoration:none;";
-            a.href = l; a.target = "_blank";
-            a.innerHTML = `<i class="fa-solid fa-link"></i>`;
+            a.href = l; a.target = "_blank"; a.innerHTML = `<i class="fa-solid fa-link"></i>`;
             b.appendChild(a);
-        });
-    }
-
-    // --- DATABASE ---
-    window.saveToFirebase = async () => {
-        const data = {
-            name: document.getElementById('uName').innerText,
-            about: document.getElementById('uAbout').innerText,
-            bday: document.getElementById('uBday').innerText,
-            hobbies: document.getElementById('uHobbies').innerText,
-            fav: document.getElementById('uFav').innerText,
-            pfp: document.getElementById('pfpImg').src,
-            pageStyle: getComputedStyle(document.documentElement).getPropertyValue('--page-bg'),
-            cardStyle: getComputedStyle(document.documentElement).getPropertyValue('--card-bg'),
-            gallery: galleryArr,
-            socials: socialLinks
-        };
-        await set(ref(db, 'profiles/' + userId), data);
-        localStorage.setItem('owner_' + userId, 'true');
-        location.reload();
-    };
-
-    function loadData() {
-        onValue(ref(db, 'profiles/' + userId), (snap) => {
-            const v = snap.val();
-            const btn = document.getElementById('keyBtn');
-            if(v) {
-                document.getElementById('uName').innerText = v.name;
-                document.getElementById('uAbout').innerText = v.about;
-                document.getElementById('uBday').innerText = v.bday;
-                document.getElementById('uHobbies').innerText = v.hobbies;
-                document.getElementById('uFav').innerText = v.fav;
-                document.getElementById('pfpImg').src = v.pfp;
-                setPageStyle('--page-bg', v.pageStyle);
-                setPageStyle('--card-bg', v.cardStyle);
-                galleryArr = v.gallery || [];
-                socialLinks = v.socials || [];
-                renderSocials(); renderGallery();
-                if(isOwner) enableEditing();
-                btn.classList.remove('pulse-animation');
-            } else {
-                btn.classList.add('pulse-animation');
-            }
         });
     }
 
@@ -361,7 +305,7 @@
     document.getElementById('pfpZone').onclick = () => isOwner && document.getElementById('pfpInput').click();
     document.getElementById('pfpInput').onchange = (e) => {
         const r = new FileReader();
-        r.onload = () => document.getElementById('pfpImg').src = r.result;
+        r.onload = async () => document.getElementById('pfpImg').src = await compress(r.result, 0.6);
         r.readAsDataURL(e.target.files[0]);
     };
 </script>
