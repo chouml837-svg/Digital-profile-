@@ -72,17 +72,22 @@
             background: rgba(255,255,255,0.8); padding: 6px; border-radius: var(--pfp-shape); 
             box-shadow: 0 12px 30px rgba(0,0,0,0.12); overflow: hidden; z-index: 10; 
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            cursor: pointer;
         }
         .pfp-area img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--pfp-shape); }
         
+        /* 🛠️ FIX: Made name background hug the text */
         .user-name { 
             font-family: 'Playfair Display', serif; 
             font-size: clamp(26px, 8vw, 34px); 
-            margin: 20px 0 10px; text-align: center;
+            margin: 20px auto 10px; text-align: center;
             text-shadow: 0 2px 15px rgba(255,255,255,0.8);
             letter-spacing: -0.5px;
-            width: 100%;
+            width: fit-content; 
+            max-width: 90%;
+            padding: 0 10px;
             word-wrap: break-word;
+            border-radius: 40px; 
         }
         
         .section-label { 
@@ -282,13 +287,11 @@
     const db = getDatabase(app);
     const id = new URLSearchParams(window.location.search).get('id') || "0000";
     
-    // 🛠️ FIX: Ensure we detect the key properly across different subdomains
     let secretKey = localStorage.getItem('owner_key_' + id);
     let isOwner = false;
     let galleryArr = [];
     let socialLinks = [];
 
-    // 🆕 Detect In-App Browsers
     const isInApp = /FBAN|FBAV|Instagram|Twitter|LinkedIn|Messenger/i.test(navigator.userAgent);
     if(isInApp) document.getElementById('browserWarn').style.display = 'block';
 
@@ -299,8 +302,6 @@
         if(v) {
             document.getElementById('claimScreen').classList.add('hidden');
             document.getElementById('profileContainer').classList.remove('hidden');
-
-            // 🛠️ FIX: Force owner check
             isOwner = (secretKey && v.secretKey === secretKey);
             
             document.getElementById('uName').innerText = v.name || "Name";
@@ -317,7 +318,6 @@
             
             if(isOwner) enableOwnerMode();
         } else {
-            // Unclaimed
             document.getElementById('profileContainer').classList.add('hidden');
             document.getElementById('claimScreen').classList.remove('hidden');
         }
@@ -325,25 +325,10 @@
 
     window.claimProfile = async () => {
         document.getElementById('claimCard').innerHTML = '<div class="load-spinner" style="margin: 0 auto;"></div><p style="margin-top:20px; font-weight:600; color:#555;">Linking to this device...</p>';
-        
         secretKey = 'owner_' + Math.random().toString(36).substr(2, 9) + Date.now();
         localStorage.setItem('owner_key_' + id, secretKey);
-
-        const initialData = {
-            secretKey: secretKey,
-            name: "New Profile",
-            about: "Tap the pencil icon to edit...",
-            bday: "--",
-            hobbies: "--",
-            fav: "...",
-            pfp: "https://via.placeholder.com/150",
-            pageStyle: "#f2f2f7",
-            cardStyle: "rgba(255,255,255,0.35)",
-            timestamp: Date.now()
-        };
-
+        const initialData = { secretKey: secretKey, name: "New Profile", about: "Tap the pencil icon to edit...", bday: "--", hobbies: "--", fav: "...", pfp: "https://via.placeholder.com/150", pageStyle: "#f2f2f7", cardStyle: "rgba(255,255,255,0.35)", timestamp: Date.now() };
         await set(ref(db, 'profiles/' + id), initialData);
-        // Reload helps ensure localStorage and Firebase are perfectly synced
         location.reload(); 
     };
 
@@ -354,7 +339,18 @@
         document.getElementById('addGalBtn').classList.remove('hidden');
     }
 
-    // --- ALL ORIGINAL FUNCTIONS KEPT BELOW ---
+    // 🛠️ FIX: Removed the alert pop-up from here
+    document.getElementById('pfpInput').onchange = async (e) => {
+        if (e.target.files && e.target.files[0]) {
+            const r = new FileReader();
+            r.onload = async (event) => {
+                const compressed = await compress(event.target.result, 0.4);
+                document.getElementById('pfpImg').src = compressed;
+            };
+            r.readAsDataURL(e.target.files[0]);
+        }
+    };
+
     function getSocialIcon(url) {
         url = url.toLowerCase();
         if (url.includes('instagram.com')) return 'fa-brands fa-instagram';
@@ -407,7 +403,6 @@
     window.saveToFirebase = async () => {
         document.getElementById('initLoader').style.display = 'flex';
         document.querySelector('#initLoader p').innerText = "Syncing with GitHub...";
-        
         const data = {
             secretKey: secretKey,
             name: document.getElementById('uName').innerText,
@@ -418,9 +413,7 @@
             pfp: document.getElementById('pfpImg').src,
             pageStyle: getComputedStyle(document.documentElement).getPropertyValue('--page-bg'),
             cardStyle: getComputedStyle(document.documentElement).getPropertyValue('--card-bg'),
-            gallery: galleryArr,
-            socials: socialLinks,
-            timestamp: Date.now()
+            gallery: galleryArr, socials: socialLinks, timestamp: Date.now()
         };
         await set(ref(db, 'profiles/' + id), data);
         location.reload();
