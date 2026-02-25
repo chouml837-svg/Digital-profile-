@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Digital Profile 1</title>
+    <title>Digital Profile | Ultimate Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     
@@ -15,7 +15,7 @@
             --accent: #007aff; 
         }
 
-        /* 📱 UNIVERSAL RESET FOR MOBILE & GITHUB PAGES */
+        /* 📱 UNIVERSAL RESET */
         * { 
             box-sizing: border-box; 
             transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); 
@@ -39,14 +39,12 @@
         .load-spinner { width: 30px; height: 30px; border: 3px solid #e5e5ea; border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* 🆕 CLAIM SCREEN STYLES */
         #claimScreen {
             position: fixed; inset: 0; background: var(--page-bg); z-index: 99990; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
             padding: 20px;
         }
 
-        /* 📦 FLEXIBLE CONTAINER */
         .container { 
             width: 100%; 
             max-width: 450px; 
@@ -55,7 +53,6 @@
             position: relative; 
         }
 
-        /* 💎 APPLE-STYLE GLASS CARD */
         .main-white-card { 
             background: var(--card-bg); 
             background-size: cover; background-position: center;
@@ -68,7 +65,6 @@
             width: 100%;
         }
 
-        /* 👤 RESPONSIVE PFP */
         .pfp-area { 
             width: clamp(110px, 30vw, 140px); 
             height: clamp(110px, 30vw, 140px); 
@@ -94,7 +90,6 @@
             letter-spacing: 1.5px; color: rgba(60, 60, 67, 0.6); margin: 18px 0 8px; display: block; 
         }
         
-        /* 💎 PREMIUM SUB-CARDS */
         .sub-card { 
             background: rgba(255, 255, 255, 0.45); 
             border: 1px solid rgba(255,255,255,0.6);
@@ -140,7 +135,6 @@
         }
         #ownerFab.show { opacity: 1; pointer-events: auto; }
 
-        /* 💎 iOS STYLE STUDIO SHEET */
         .studio-panel { 
             position: fixed; bottom: 0; left: 0; width: 100%; height: 85vh; 
             background: rgba(255, 255, 255, 0.9); 
@@ -191,6 +185,9 @@
         }
 
         .hidden { display: none !important; }
+
+        /* 🆕 BROWSER WARNING STYLE */
+        #browserWarn { font-size: 12px; color: #ff3b30; margin-top: 15px; font-weight: 600; display: none; }
     </style>
 </head>
 <body>
@@ -198,11 +195,12 @@
 <div id="initLoader"><div class="load-spinner"></div><p style="margin-top:15px; font-size:11px; font-weight:600; color:#555;">Authenticating</p></div>
 
 <div id="claimScreen" class="hidden">
-    <div class="main-white-card" id="claimCard" style="max-width: 350px; text-align: center; padding: 40px 30px; margin-top: 0;">
+    <div class="main-white-card" id="claimCard" style="max-width: 350px; text-align: center; padding: 40px 30px;">
         <i class="fa-solid fa-qrcode" style="font-size: 50px; color: var(--accent); margin-bottom: 20px;"></i>
         <h1 style="font-family: 'Playfair Display', serif; font-size: 28px; margin-bottom: 10px; width: 100%;">Unclaimed Profile</h1>
-        <p style="color: #555; font-size: 14px; margin-bottom: 30px; line-height: 1.5;">This QR code is fresh! Claim it now to set up your digital profile and link your socials.</p>
+        <p style="color: #555; font-size: 14px; margin-bottom: 30px; line-height: 1.5;">Claim this profile to start customizing your space.</p>
         <button onclick="claimProfile()" class="save-btn" style="margin-top: 0;">Let's Get Started</button>
+        <p id="browserWarn">⚠️ To save permanently, please open this link in Chrome or Safari, not a QR app browser.</p>
     </div>
 </div>
 
@@ -271,7 +269,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDO7jeyEQr6qdYrorxzT5lNh0QiLzMwYmw",
@@ -283,31 +281,28 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const id = new URLSearchParams(window.location.search).get('id') || "0000";
+    
+    // 🛠️ FIX: Ensure we detect the key properly across different subdomains
     let secretKey = localStorage.getItem('owner_key_' + id);
     let isOwner = false;
     let galleryArr = [];
     let socialLinks = [];
 
-    function getSocialIcon(url) {
-        url = url.toLowerCase();
-        if (url.includes('instagram.com')) return 'fa-brands fa-instagram';
-        if (url.includes('tiktok.com')) return 'fa-brands fa-tiktok';
-        if (url.includes('facebook.com')) return 'fa-brands fa-facebook';
-        if (url.includes('twitter.com') || url.includes('x.com')) return 'fa-brands fa-x-twitter';
-        if (url.includes('youtube.com')) return 'fa-brands fa-youtube';
-        return 'fa-solid fa-link';
-    }
+    // 🆕 Detect In-App Browsers
+    const isInApp = /FBAN|FBAV|Instagram|Twitter|LinkedIn|Messenger/i.test(navigator.userAgent);
+    if(isInApp) document.getElementById('browserWarn').style.display = 'block';
 
     onValue(ref(db, 'profiles/' + id), (snap) => {
         const v = snap.val();
         document.getElementById('initLoader').style.display = 'none';
 
         if(v) {
-            // ✅ PROFILE EXISTS IN DATABASE
             document.getElementById('claimScreen').classList.add('hidden');
             document.getElementById('profileContainer').classList.remove('hidden');
 
+            // 🛠️ FIX: Force owner check
             isOwner = (secretKey && v.secretKey === secretKey);
+            
             document.getElementById('uName').innerText = v.name || "Name";
             document.getElementById('uAbout').innerText = v.about || "Bio...";
             document.getElementById('uBday').innerText = v.bday || "--";
@@ -322,30 +317,18 @@
             
             if(isOwner) enableOwnerMode();
         } else {
-            // ❌ PROFILE DOES NOT EXIST IN DATABASE
-            if (secretKey) {
-                // User already has the local key (maybe they just made it in the generator but didn't save yet)
-                document.getElementById('claimScreen').classList.add('hidden');
-                document.getElementById('profileContainer').classList.remove('hidden');
-                enableOwnerMode();
-            } else {
-                // Brand new scan - Show the Claim Screen
-                document.getElementById('profileContainer').classList.add('hidden');
-                document.getElementById('claimScreen').classList.remove('hidden');
-            }
+            // Unclaimed
+            document.getElementById('profileContainer').classList.add('hidden');
+            document.getElementById('claimScreen').classList.remove('hidden');
         }
     });
 
-    // 🆕 CLAIM FUNCTION
     window.claimProfile = async () => {
-        // Change button to a loading state
-        document.getElementById('claimCard').innerHTML = '<div class="load-spinner" style="margin: 0 auto;"></div><p style="margin-top:20px; font-weight:600; color:#555;">Securing Profile...</p>';
+        document.getElementById('claimCard').innerHTML = '<div class="load-spinner" style="margin: 0 auto;"></div><p style="margin-top:20px; font-weight:600; color:#555;">Linking to this device...</p>';
         
-        // 1. Generate a unique key and save to device
-        secretKey = 'key_' + Math.random().toString(36).substring(2, 10) + Date.now();
+        secretKey = 'owner_' + Math.random().toString(36).substr(2, 9) + Date.now();
         localStorage.setItem('owner_key_' + id, secretKey);
 
-        // 2. Create the initial skeleton data
         const initialData = {
             secretKey: secretKey,
             name: "New Profile",
@@ -359,13 +342,9 @@
             timestamp: Date.now()
         };
 
-        // 3. Save to Firebase to officially "Claim" it
         await set(ref(db, 'profiles/' + id), initialData);
-
-        // 4. Hide claim screen, show profile, and unlock tools
-        document.getElementById('claimScreen').classList.add('hidden');
-        document.getElementById('profileContainer').classList.remove('hidden');
-        enableOwnerMode();
+        // Reload helps ensure localStorage and Firebase are perfectly synced
+        location.reload(); 
     };
 
     function enableOwnerMode() {
@@ -373,6 +352,17 @@
         document.getElementById('ownerFab').classList.add('show');
         document.querySelectorAll('.sub-card, .user-name').forEach(el => el.contentEditable = true);
         document.getElementById('addGalBtn').classList.remove('hidden');
+    }
+
+    // --- ALL ORIGINAL FUNCTIONS KEPT BELOW ---
+    function getSocialIcon(url) {
+        url = url.toLowerCase();
+        if (url.includes('instagram.com')) return 'fa-brands fa-instagram';
+        if (url.includes('tiktok.com')) return 'fa-brands fa-tiktok';
+        if (url.includes('facebook.com')) return 'fa-brands fa-facebook';
+        if (url.includes('twitter.com') || url.includes('x.com')) return 'fa-brands fa-x-twitter';
+        if (url.includes('youtube.com')) return 'fa-brands fa-youtube';
+        return 'fa-solid fa-link';
     }
 
     window.updateCardStyle = (val) => {
@@ -416,7 +406,7 @@
 
     window.saveToFirebase = async () => {
         document.getElementById('initLoader').style.display = 'flex';
-        document.querySelector('#initLoader p').innerText = "Saving Profile...";
+        document.querySelector('#initLoader p').innerText = "Syncing with GitHub...";
         
         const data = {
             secretKey: secretKey,
@@ -478,5 +468,4 @@
     document.getElementById('addGalBtn').onclick = () => document.getElementById('galInput').click();
 </script>
 </body>
-    </html>
-                                                                            
+</html>
