@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Digital Profile</title>
+    <title>Digital Profile 1</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     
@@ -28,7 +28,7 @@
             background: var(--page-bg); background-size: cover; 
             background-position: center; background-attachment: fixed; 
             font-family: 'Inter', sans-serif; color: #1c1c1e; min-height: 100vh; 
-            overflow-x: hidden; /* Prevents side-to-side scrolling bugs */
+            overflow-x: hidden; 
         }
 
         #initLoader { 
@@ -39,10 +39,17 @@
         .load-spinner { width: 30px; height: 30px; border: 3px solid #e5e5ea; border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* 🆕 CLAIM SCREEN STYLES */
+        #claimScreen {
+            position: fixed; inset: 0; background: var(--page-bg); z-index: 99990; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            padding: 20px;
+        }
+
         /* 📦 FLEXIBLE CONTAINER */
         .container { 
             width: 100%; 
-            max-width: 450px; /* Limits width on desktop */
+            max-width: 450px; 
             margin: 0 auto; 
             padding: 100px 20px 80px; 
             position: relative; 
@@ -74,7 +81,7 @@
         
         .user-name { 
             font-family: 'Playfair Display', serif; 
-            font-size: clamp(26px, 8vw, 34px); /* Fluid typography */
+            font-size: clamp(26px, 8vw, 34px); 
             margin: 20px 0 10px; text-align: center;
             text-shadow: 0 2px 15px rgba(255,255,255,0.8);
             letter-spacing: -0.5px;
@@ -110,7 +117,7 @@
 
         .social-bar {
             display: flex; justify-content: center; gap: 15px; margin-top: 35px; 
-            flex-wrap: wrap; /* Ensures buttons don't disappear on small screens */
+            flex-wrap: wrap; 
             width: 100%;
         }
 
@@ -190,7 +197,16 @@
 
 <div id="initLoader"><div class="load-spinner"></div><p style="margin-top:15px; font-size:11px; font-weight:600; color:#555;">Authenticating</p></div>
 
-<div class="container">
+<div id="claimScreen" class="hidden">
+    <div class="main-white-card" id="claimCard" style="max-width: 350px; text-align: center; padding: 40px 30px; margin-top: 0;">
+        <i class="fa-solid fa-qrcode" style="font-size: 50px; color: var(--accent); margin-bottom: 20px;"></i>
+        <h1 style="font-family: 'Playfair Display', serif; font-size: 28px; margin-bottom: 10px; width: 100%;">Unclaimed Profile</h1>
+        <p style="color: #555; font-size: 14px; margin-bottom: 30px; line-height: 1.5;">This QR code is fresh! Claim it now to set up your digital profile and link your socials.</p>
+        <button onclick="claimProfile()" class="save-btn" style="margin-top: 0;">Let's Get Started</button>
+    </div>
+</div>
+
+<div class="container" id="profileContainer">
     <div class="main-white-card" id="mainCard">
         <div class="pfp-area" id="pfpZone">
             <img id="pfpImg" src="https://via.placeholder.com/150">
@@ -284,7 +300,13 @@
 
     onValue(ref(db, 'profiles/' + id), (snap) => {
         const v = snap.val();
+        document.getElementById('initLoader').style.display = 'none';
+
         if(v) {
+            // ✅ PROFILE EXISTS IN DATABASE
+            document.getElementById('claimScreen').classList.add('hidden');
+            document.getElementById('profileContainer').classList.remove('hidden');
+
             isOwner = (secretKey && v.secretKey === secretKey);
             document.getElementById('uName').innerText = v.name || "Name";
             document.getElementById('uAbout').innerText = v.about || "Bio...";
@@ -297,17 +319,54 @@
             galleryArr = v.gallery || [];
             socialLinks = v.socials || [];
             renderGallery(); renderSocials();
+            
             if(isOwner) enableOwnerMode();
         } else {
-            // FIX 1: If it's a new profile, we still need to enable owner mode if they created it
-            if(secretKey) {
-                isOwner = true;
+            // ❌ PROFILE DOES NOT EXIST IN DATABASE
+            if (secretKey) {
+                // User already has the local key (maybe they just made it in the generator but didn't save yet)
+                document.getElementById('claimScreen').classList.add('hidden');
+                document.getElementById('profileContainer').classList.remove('hidden');
                 enableOwnerMode();
+            } else {
+                // Brand new scan - Show the Claim Screen
+                document.getElementById('profileContainer').classList.add('hidden');
+                document.getElementById('claimScreen').classList.remove('hidden');
             }
         }
-        // FIX 2: Always hide the loader, even if Firebase is empty!
-        document.getElementById('initLoader').style.display = 'none';
     });
+
+    // 🆕 CLAIM FUNCTION
+    window.claimProfile = async () => {
+        // Change button to a loading state
+        document.getElementById('claimCard').innerHTML = '<div class="load-spinner" style="margin: 0 auto;"></div><p style="margin-top:20px; font-weight:600; color:#555;">Securing Profile...</p>';
+        
+        // 1. Generate a unique key and save to device
+        secretKey = 'key_' + Math.random().toString(36).substring(2, 10) + Date.now();
+        localStorage.setItem('owner_key_' + id, secretKey);
+
+        // 2. Create the initial skeleton data
+        const initialData = {
+            secretKey: secretKey,
+            name: "New Profile",
+            about: "Tap the pencil icon to edit...",
+            bday: "--",
+            hobbies: "--",
+            fav: "...",
+            pfp: "https://via.placeholder.com/150",
+            pageStyle: "#f2f2f7",
+            cardStyle: "rgba(255,255,255,0.35)",
+            timestamp: Date.now()
+        };
+
+        // 3. Save to Firebase to officially "Claim" it
+        await set(ref(db, 'profiles/' + id), initialData);
+
+        // 4. Hide claim screen, show profile, and unlock tools
+        document.getElementById('claimScreen').classList.add('hidden');
+        document.getElementById('profileContainer').classList.remove('hidden');
+        enableOwnerMode();
+    };
 
     function enableOwnerMode() {
         isOwner = true;
@@ -356,7 +415,6 @@
     }
 
     window.saveToFirebase = async () => {
-        // Show loader while saving
         document.getElementById('initLoader').style.display = 'flex';
         document.querySelector('#initLoader p').innerText = "Saving Profile...";
         
@@ -404,7 +462,6 @@
     document.getElementById('closeStudio').onclick = () => document.getElementById('studio').style.display = 'none';
     document.getElementById('pfpZone').onclick = () => isOwner && document.getElementById('pfpInput').click();
     
-    // FIX 3: Fixed the multi-image upload crash by wrapping it in an async for-loop properly
     document.getElementById('galInput').onchange = async (e) => {
         const files = [...e.target.files];
         for(let i=0; i<files.length; i++) {
@@ -421,4 +478,5 @@
     document.getElementById('addGalBtn').onclick = () => document.getElementById('galInput').click();
 </script>
 </body>
-</html>
+    </html>
+                                                                            
